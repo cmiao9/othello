@@ -8,7 +8,7 @@
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
  * within 30 seconds.
  */
-Player::Player(Side side) {
+Player::Player(Side s) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
 
@@ -17,6 +17,12 @@ Player::Player(Side side) {
      * precalculating things, etc.) However, remember that you will only have
      * 30 seconds.
      */
+     
+     // create a new board object 
+     Board * board = new Board();
+     
+     // set your (the player's) side 
+     Side side = s; 
 }
 
 /*
@@ -43,5 +49,13 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */
-    return nullptr;
+     
+     // see if the board has a move
+     if(board.hasMoves(side) == false){
+		 return nullptr;
+	 }
+	 else{
+		 // process the opponent's move
+		 // calculate your own move
+	 }
 }
