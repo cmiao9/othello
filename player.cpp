@@ -55,6 +55,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */
 
+	// determine time 
+	time_t t1 = time(0);
+	
     // Opponent's move -cathy
     if (opponentsMove != nullptr) {
         board->doMove(opponentsMove, o_side);
@@ -65,8 +68,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     if (move != nullptr) {
         board->doMove(move, p_side);
     }
-
-    return move;
+    
+    time_t t2 = time(0);
+    
+    if(difftime(t2, t1)>msLeft and msLeft!=-1) { // need to double check if that's
+		// in milliseconds -rona
+		cerr << "Timeout error" << endl; 
+	}
+	else{
+		return move;
+	}
 }
 
 Move *Player::getMove() {
