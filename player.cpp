@@ -71,18 +71,17 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     
     time_t t2 = time(0);
     
-    if(difftime(t2, t1)>msLeft and msLeft!=-1) { // need to double check if that's
+    if(1000 * difftime(t2, t1) > msLeft and msLeft != -1) { // need to double check if that's
 		// in milliseconds -rona
-		cerr << "Timeout error" << endl; 
-	}
-	else{
-		return move;
-	}
+	cerr << "Timeout error" << endl;
+        return nullptr;
+    }
+    return move;
 }
 
 Move *Player::getMove() {
 
-    // Random move pick -cathy
+/*    // Random move pick -cathy
     Move *move = new Move(-1, -1);
 
     for (int i = 0; i < 8; i++) {
@@ -96,6 +95,57 @@ Move *Player::getMove() {
             }
         }
     }
+*/
 
-    return nullptr;
+    Board *copy = board->copy();
+    Board *copy2 = board->copy();
+    Move *max = new Move(-1, -1);
+    Move *max2 = new Move(-1, -1);
+    Move *current = new Move(-1, -1);
+    Move *current2 = new Move(-1, -1);
+    int max_count = 0, curr_count = 0, max_count2 = 100, curr_count2 = 0;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+
+            current->setX(i);
+            current->setY(j);
+
+            if (board->checkMove(current, p_side) == true) {
+                copy = board->copy();
+                copy->doMove(current, p_side);
+
+                for (int i2 = 0; i2 < 8; i2++) {
+                    for (int j2 = 0; j2 < 8; j2++) {
+
+                        current2->setX(i2);
+                        current2->setY(j2);
+
+                        if (copy->checkMove(current2, o_side) == true) {
+                            copy2 = copy->copy();
+                            copy2->doMove(current2, o_side);
+
+                            curr_count2 = copy2->count(p_side);
+
+                            if (curr_count2 < max_count2) {
+                                max2->setX(i2);
+                                max2->setY(j2);
+                                max_count2 = curr_count2;
+
+                            }
+
+                        }
+                    }
+                }
+                //curr_count = copy->count(p_side);
+                if (max_count2 > max_count) {
+                    max->setX(i);
+                    max->setY(j);
+                    max_count = max_count2;
+                }
+            }
+        }
+    }
+
+    return max;
 }
