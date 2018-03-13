@@ -1,7 +1,5 @@
 #include "player.hpp"
 
-// Ignore this line
-
 /*
  * Constructor for the player; initialize everything here. The side your AI is
  * on (BLACK or WHITE) is passed in as "side". The constructor must finish
@@ -82,28 +80,34 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
 Move *Player::getMove() {
 
     // Declarations
-    Board *copy;
-    Board *copy2;
-    Move *max = new Move(-1, -1);
-    Move *current = new Move(-1, -1);
+    Board *copy1, *copy2, *copy3, *copy4;
+    Move *best = new Move(-1, -1);
+    Move *current1 = new Move(-1, -1);
     Move *current2 = new Move(-1, -1);
-    int max_count = 0, max_count2 = 100, curr_count = 0;
+    Move *current3 = new Move(-1, -1);
+    Move *current4 = new Move(-1, -1);
+    double max1 = 0.0, min2 = 100.0, max3 = 0.0, min4 = 100.0, curr_count = 0.0;
 
-    // Loop through player's moves
+    // We have no valid moves
+    if (board->hasMoves(p_side) == false) {
+        return nullptr;
+    }
+
+    // Loop through player's moves -- MAX1
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
 
-            current->setX(i);
-            current->setY(j);
+            current1->setX(i);
+            current1->setY(j);
 
             // Check if valid
-            if (board->checkMove(current, p_side) == true) {
+            if (board->checkMove(current1, p_side) == true) {
 
-                max_count2 = 100;
-                copy = board->copy();
-                copy->doMove(current, p_side);
+                copy1 = board->copy();
+                copy1->doMove(current1, p_side);
+                min2 = 100.0;
 
-                // Loop through opponent's moves
+                // Loop through opponent's moves -- MIN2
                 for (int i2 = 0; i2 < 8; i2++) {
                     for (int j2 = 0; j2 < 8; j2++) {
 
@@ -111,36 +115,114 @@ Move *Player::getMove() {
                         current2->setY(j2);
 
                         // Check if valid
-                        if (copy->checkMove(current2, o_side) == true) {
+                        if (copy1->checkMove(current2, o_side) == true) {
 
-                            copy2 = copy->copy();
+                            copy2 = copy1->copy();
                             copy2->doMove(current2, o_side);
+                            max3 = 0.0;
 
-                            // Find opponent's move (min player color)
-                            curr_count = copy2->count(p_side);
+                            // Loop through player's moves -- MAX3
+                            for (int i3 = 0; i3 < 8; i3++) {
+                                for (int j3 = 0; j3 < 8; j3++) {
 
-                            if (curr_count < max_count2) {
-                                max_count2 = curr_count;
+                                    current3->setX(i3);
+                                    current3->setY(j3);
+
+                                    // Check if valid
+                                    if (copy2->checkMove(current3, p_side) == true) {
+
+                                        copy3 = copy2->copy();
+                                        copy3->doMove(current3, p_side);
+                                        min4 = 100.0;
+
+                                        // Loop through opponent's moves -- MIN4
+                                        for (int i4 = 0; i4 < 8; i4++) {
+                                            for (int j4 = 0; j4 < 8; j4++) {
+
+                                                current4->setX(i4);
+                                                current4->setY(j4);
+
+                                                // Check if valid
+                                                if (copy3->checkMove(current4, o_side) == true) {
+
+                                                    copy4 = copy3->copy();
+                                                    copy4->doMove(current4, o_side);
+
+                                                    // MINIMIZE
+                                                    curr_count = copy4->count(p_side);
+
+                                                    if (curr_count < min4) {
+                                                        min4 = curr_count;
+                                                    }
+
+                                                }
+                                            }
+                                        }
+
+                                        // MAXIMIZE
+                                        if (min4 > max3) {
+                                            max3 = curr_count;
+                                        }
+                                    }
+
+                                }
+                            }
+
+                            // MINIMIZE
+                            if (max3 < min2) {
+                                min2 = max3;
                             }
 
                         }
                     }
                 }
 
-                // Update running best move
-                if (max_count2 > max_count) {
-                    max->setX(i);
-                    max->setY(j);
-                    max_count = max_count2;
+                // MAXIMIZE
+                min2 += this->weight(current1, p_side);
+                if (min2 >= max1) {
+                    best->setX(i);
+                    best->setY(j);
+                    max1 = min2;
                 }
             }
         }
     }
 
-    // We have no valid moves
-    if (max->getX() == -1) {
-        return nullptr;
+    return best;
+}
+
+double Player::weight(Move *move, Side side) {
+
+    if (board->count(p_side) + board->count(o_side) > 20) {
+        return 0.0;
     }
 
-    return max;
+    double c_weight = 3.0, e_weight = 0.0;
+
+    // Corners
+    if (move->getX() % 8 == 0 && move->getY() % 8 == 0) {
+        if (side == p_side)  {
+            return c_weight;
+        }
+        return -c_weight;
+    }
+
+    // Adjacent to corners
+    if (((move->getX() + 1) % 8 == 0 || (move->getX() - 1) % 8 == 0 ) && ((move->getY() + 1) % 8 == 0 || (move->getY() - 1) % 8 == 0)) {
+
+        if (side == p_side) {
+            return -c_weight;
+        }
+        return c_weight;
+    }
+
+    // Edges
+    if (move->getX() % 8 == 0 || move->getY() % 8 == 0) {
+        if (side == p_side)  {
+            return e_weight;
+        }
+        return -e_weight;
+    }
+
+    return 0;
 }
